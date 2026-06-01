@@ -1,0 +1,6 @@
+{
+  "name": "Solara Sands Resort",
+  "description": "A high-fidelity hotel website MVP with visitor booking flow, interactive map, reviews, and a staff admin console to manage rooms and inquiries.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

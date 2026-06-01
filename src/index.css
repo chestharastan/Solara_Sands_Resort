@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-brand-sage: #5a5a40;
+  --color-brand-sage-hover: #484833;
+  --color-brand-sand: #f5f5f0;
+  --color-brand-sand-dark: #e9e9df;
+  --color-brand-charcoal: #2d2d2a;
+  --color-brand-muted: #7a7a70;
+  --color-brand-border: #d6d6ca;
+  --color-brand-divider: #e2e2d8;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f5f5f0; /* Natural Tones Soft Cream Green */
+  color: #2d2d2a; /* Natural Tones Soft Charcoal */
+}
+
+/* Elegant keyframe helper for the interactive SVG Map trail dash animation */
+@keyframes dash {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
