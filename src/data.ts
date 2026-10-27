@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Hotel, Room, Amenity, GalleryItem, Review } from './types';
+import { Hotel, Room, Amenity, GalleryItem, Review, BookingInquiry } from './types';
 
 export const INITIAL_HOTEL: Hotel = {
   id: 'solara_boutique',
@@ -13,7 +13,7 @@ export const INITIAL_HOTEL: Hotel = {
   address: 'Sen Sok, Phnom Penh, Cambodia',
   phone: '+855 69 260 405',
   email: 'chesthareahtan@gmail.com',
-  hero_image: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1600&q=80',
+  hero_image: '',
 };
 
 export const INITIAL_AMENITIES: Amenity[] = [
@@ -37,7 +37,7 @@ export const INITIAL_ROOMS: Room[] = [
     price: 189,
     capacity: 2,
     size: 42,
-    image: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
+    image: '',
     amenities: ['wifi', 'breakfast', 'reception', 'parking']
   },
   {
@@ -48,7 +48,7 @@ export const INITIAL_ROOMS: Room[] = [
     price: 320,
     capacity: 3,
     size: 68,
-    image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80',
+    image: '',
     amenities: ['wifi', 'pool', 'dining', 'breakfast', 'reception', 'parking']
   },
   {
@@ -59,7 +59,7 @@ export const INITIAL_ROOMS: Room[] = [
     price: 549,
     capacity: 4,
     size: 110,
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80',
+    image: '',
     amenities: ['wifi', 'pool', 'dining', 'shuttle', 'spa', 'breakfast', 'reception', 'parking']
   },
   {
@@ -70,7 +70,7 @@ export const INITIAL_ROOMS: Room[] = [
     price: 149,
     capacity: 2,
     size: 38,
-    image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+    image: '',
     amenities: ['wifi', 'breakfast', 'reception', 'parking']
   }
 ];
@@ -78,32 +78,32 @@ export const INITIAL_ROOMS: Room[] = [
 export const INITIAL_GALLERY: GalleryItem[] = [
   {
     id: 'g_1',
-    image_url: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80',
+    image_url: '',
     category: 'Rooms'
   },
   {
     id: 'g_2',
-    image_url: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
+    image_url: '',
     category: 'Lobby'
   },
   {
     id: 'g_3',
-    image_url: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=800&q=80',
+    image_url: '',
     category: 'Pool'
   },
   {
     id: 'g_4',
-    image_url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
+    image_url: '',
     category: 'Restaurant'
   },
   {
     id: 'g_5',
-    image_url: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=800&q=80',
+    image_url: '',
     category: 'Exterior'
   },
   {
     id: 'g_6',
-    image_url: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=800&q=80',
+    image_url: '',
     category: 'Exterior'
   }
 ];
@@ -115,7 +115,7 @@ export const INITIAL_REVIEWS: Review[] = [
     rating: 5,
     comment: 'The attention to detail at Solara is unparalleled. From the personalized check-in treats to the exceptional sunset views from our private pool villa, everything was pristine.',
     date: 'May 12, 2026',
-    avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80'
+    avatar_url: ''
   },
   {
     id: 'r_2',
@@ -123,7 +123,7 @@ export const INITIAL_REVIEWS: Review[] = [
     rating: 5,
     comment: 'Exceptional level of service. The 24/7 concierge helped arrange an immediate private wine tour, and the bed felt like sleeping on a cloud. Will definitely return next summer!',
     date: 'April 28, 2026',
-    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80'
+    avatar_url: ''
   },
   {
     id: 'r_3',
@@ -131,13 +131,84 @@ export const INITIAL_REVIEWS: Review[] = [
     rating: 4,
     comment: 'Beautiful resort right by the sea. The rooftop swimming experience was surreal, looking directly over the ocean. Breakfast buffet had fantastic fresh options.',
     date: 'May 20, 2026',
-    avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80'
+    avatar_url: ''
   }
 ];
 
-export const NEARBY_ATTRACTIONS = [
-  { name: 'Sandy Beach Cove', distance: '3 min walk', desc: 'Serene white sand coastline perfect for shells collection and light strolls.' },
-  { name: 'Beacon Cliffside Lighthouse', distance: '5 min drive', desc: '140-year old cliff lighthouse offering 360-degree sunset panoramas.' },
-  { name: 'Cove Village Downtown', distance: '8 min shuttle', desc: 'Boutique local market stores, organic bakeries, and handcrafted souvenirs.' },
-  { name: 'Redwood Valley Hiking Trail', distance: '15 min drive', desc: 'Scenic wood trails towering above coastal mountain ridges.' }
+/** Demo inquiries so the Staff Portal is not empty on first run. */
+export const INITIAL_INQUIRIES: BookingInquiry[] = [
+  {
+    id: 'inquiry_demo_1',
+    name: 'Margot de Vore',
+    email: 'margot.devore@chateau.fr',
+    check_in: '2026-06-15',
+    check_out: '2026-06-20',
+    guests: 2,
+    message: 'Looking forward to our first coastal summer getaway! Can we request high-floor suites with extra feather pillows?',
+    status: 'Pending',
+    room_id: 'room_2',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'inquiry_demo_2',
+    name: 'Dr. Alistair Sterling',
+    email: 'a.sterling@cardio.org',
+    check_in: '2026-07-01',
+    check_out: '2026-07-08',
+    guests: 4,
+    message: 'Private Sanctuary Pool Villa reservation request. We will need valet coordination and double airport luxury pickup details.',
+    status: 'Contacted',
+    room_id: 'room_3',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
+
+export interface Attraction {
+  name: string;
+  distance: string;
+  desc: string;
+  /** Live-map coordinates (used only when a Google Maps key is configured). */
+  location: { lat: number; lng: number };
+  /** Marker colour on the live map. */
+  color: string;
+  /** Position on the stylised chart shown when there is no map key (0–100 in each axis). */
+  chart: { x: number; y: number };
+}
+
+/** Coordinates of the resort on the live map. */
+export const HOTEL_LOCATION = { lat: 36.5684, lng: -121.9616 };
+
+export const NEARBY_ATTRACTIONS: Attraction[] = [
+  {
+    name: 'Sandy Beach Cove',
+    distance: '3 min walk',
+    desc: 'Serene white sand coastline perfect for shells collection and light strolls.',
+    location: { lat: 36.5472, lng: -121.9365 },
+    color: '#4a6b82',
+    chart: { x: 70, y: 64 },
+  },
+  {
+    name: 'Beacon Cliffside Lighthouse',
+    distance: '5 min drive',
+    desc: '140-year old cliff lighthouse offering 360-degree sunset panoramas.',
+    location: { lat: 36.62, lng: -121.9701 },
+    color: '#9c665d',
+    chart: { x: 30, y: 18 },
+  },
+  {
+    name: 'Cove Village Downtown',
+    distance: '8 min shuttle',
+    desc: 'Boutique local market stores, organic bakeries, and handcrafted souvenirs.',
+    location: { lat: 36.5551, lng: -121.9213 },
+    color: '#7b856a',
+    chart: { x: 82, y: 36 },
+  },
+  {
+    name: 'Redwood Valley Hiking Trail',
+    distance: '15 min drive',
+    desc: 'Scenic wood trails towering above coastal mountain ridges.',
+    location: { lat: 36.4312, lng: -121.9105 },
+    color: '#735f49',
+    chart: { x: 22, y: 78 },
+  },
 ];

@@ -9,6 +9,18 @@ export default defineConfig(() => {
     define: {
       'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(process.env.GOOGLE_MAPS_PLATFORM_KEY || '')
     },
+    build: {
+      // three.js is ~140 kB gzipped and is only needed once the hero canvas starts – keep it in its own,
+      // lazily-loaded chunk so it never blocks first paint. (Staff Portal and Google Maps are lazy too.)
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (id.includes('node_modules/three/')) return 'three';
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

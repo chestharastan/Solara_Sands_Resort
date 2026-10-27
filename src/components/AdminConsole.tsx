@@ -26,6 +26,19 @@ interface AdminConsoleProps {
   onDeleteAmenity: (id: string) => void;
 }
 
+/** Photo thumbnail that degrades to a neutral "no photo" tile (empty URL or a broken link). */
+function Thumb({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
+  const [broken, setBroken] = useState(false);
+  if (!src || broken) {
+    return (
+      <div role="img" aria-label={`${alt} – no photo yet`} className={`${className} grid place-items-center bg-stone-200 text-[9px] font-mono uppercase tracking-wider text-stone-500`}>
+        No photo
+      </div>
+    );
+  }
+  return <img src={src} alt={alt} onError={() => setBroken(true)} className={`${className} object-cover`} referrerPolicy="no-referrer" />;
+}
+
 export default function AdminConsole({
   hotel, rooms, amenities, gallery, inquiries,
   onUpdateHotel, onSaveRoom, onDeleteRoom, onUpdateInquiryStatus,
@@ -84,7 +97,7 @@ export default function AdminConsole({
     setRoomPrice(150);
     setRoomCapacity(2);
     setRoomSize(40);
-    setRoomImage('https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80');
+    setRoomImage('');
     setRoomAmenities([]);
     setShowRoomForm(true);
   };
@@ -107,7 +120,7 @@ export default function AdminConsole({
 
   const handleSaveRoomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomName || !roomImage) return;
+    if (!roomName) return;
 
     onSaveRoom({
       id: editingRoomId || `room_${Date.now()}`,
@@ -339,12 +352,11 @@ export default function AdminConsole({
                   <label className="block text-stone-600 text-xs font-semibold mb-1">Landing Hero Image URL</label>
                   <input
                     type="url"
-                    required
                     value={hotelHero}
                     onChange={(e) => setHotelHero(e.target.value)}
                     className="w-full text-stone-900 border border-stone-250 px-3 py-2 rounded-lg outline-hidden text-xs font-mono"
                   />
-                  <span className="text-[10px] text-stone-400 block mt-1">Provide a high-res photo URL (preferably 16:9 ratio unsplash photo).</span>
+                  <span className="text-[10px] text-stone-400 block mt-1">Optional. The landing hero is a live 3D scene; this image is only kept as a social-share / no-WebGL poster.</span>
                 </div>
 
                 <div className="pt-4 border-t border-stone-100 flex justify-end">
@@ -405,10 +417,9 @@ export default function AdminConsole({
                       />
                     </div>
                     <div>
-                      <label className="block text-stone-600 text-xs font-semibold mb-1">Image URL</label>
+                      <label className="block text-stone-600 text-xs font-semibold mb-1">Image URL <span className="font-normal text-stone-400">(optional – leave empty to show the photo placeholder)</span></label>
                       <input
                         type="url"
-                        required
                         value={roomImage}
                         onChange={(e) => setRoomImage(e.target.value)}
                         className="w-full text-stone-900 border border-stone-250 bg-white px-3 py-2 rounded-lg outline-hidden text-xs font-mono"
@@ -515,12 +526,7 @@ export default function AdminConsole({
                       className="border border-stone-200 rounded-xl p-4 flex flex-col md:flex-row gap-5 items-center justify-between"
                     >
                       <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
-                        <img 
-                          src={room.image} 
-                          alt={room.name} 
-                          className="w-20 h-16 rounded-lg object-cover border border-stone-100 shadow-xs flex-shrink-0"
-                          referrerPolicy="no-referrer"
-                        />
+                        <Thumb src={room.image} alt={room.name} className="w-20 h-16 rounded-lg border border-stone-100 shadow-xs flex-shrink-0" />
                         <div className="text-center md:text-left">
                           <h4 className="text-stone-900 font-sans font-semibold text-sm leading-tight flex items-center gap-2 justify-center md:justify-start">
                             {room.name}
@@ -721,12 +727,7 @@ export default function AdminConsole({
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {gallery.map((item) => (
                   <div key={item.id} className="group relative aspect-square rounded-xl overflow-hidden border border-stone-100 shadow-xs bg-stone-50">
-                    <img 
-                      src={item.image_url} 
-                      alt={item.category} 
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
+                    <Thumb src={item.image_url} alt={item.category} className="w-full h-full transition-transform group-hover:scale-105" />
                     <div className="absolute top-2 left-2 text-[8px] bg-stone-900/80 backdrop-blur-xs text-white uppercase tracking-wider font-mono px-2 py-0.5 rounded-md font-bold">
                       {item.category}
                     </div>
