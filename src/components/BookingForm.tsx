@@ -3,18 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { Mail, Phone, Calendar, Users, MessageSquare, CreditCard, Sparkles, Check, CheckSquare } from 'lucide-react';
-import { Room, BookingInquiry } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Check, CreditCard, Mail, MessageCircle, Phone, Send } from 'lucide-react';
+import { BookingInquiry, Hotel, Room } from '../types';
 
 interface BookingFormProps {
+  hotel: Hotel;
   rooms: Room[];
   selectedRoomId?: string;
   onAddInquiry: (inquiry: Omit<BookingInquiry, 'id' | 'status' | 'created_at'>) => void;
 }
 
-export default function BookingForm({ rooms, selectedRoomId = '', onAddInquiry }: BookingFormProps) {
+const isoToday = () => new Date().toISOString().slice(0, 10);
+const addDays = (iso: string, n: number) => {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+
+export default function BookingForm({ hotel, rooms, selectedRoomId = '', onAddInquiry }: BookingFormProps) {
   const [roomId, setRoomId] = useState(selectedRoomId);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,347 +31,169 @@ export default function BookingForm({ rooms, selectedRoomId = '', onAddInquiry }
   const [guests, setGuests] = useState(2);
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  
-  // Direct text messages / callbacks alerts
-  const [infoAlert, setInfoAlert] = useState<string | null>(null);
+  const [alert, setAlert] = useState<string | null>(null);
 
+  // A suite card elsewhere on the page can preselect the room.
   useEffect(() => {
-    if (selectedRoomId) {
-      setRoomId(selectedRoomId);
-    }
+    if (selectedRoomId) setRoomId(selectedRoomId);
   }, [selectedRoomId]);
 
   const activeRoom = rooms.find((r) => r.id === roomId);
 
-  // Calculate pricing breakdown
-  let nights = 0;
-  let totalPrice = 0;
-  if (checkIn && checkOut && activeRoom) {
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (end > start) {
-      totalPrice = nights * activeRoom.price;
-    } else {
-      nights = 0;
-    }
-  }
+  // Price estimate: whole nights between the two dates, only when the range is valid.
+  const { nights, total } = useMemo(() => {
+    if (!checkIn || !checkOut || !activeRoom) return { nights: 0, total: 0 };
+    const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime();
+    if (diff <= 0) return { nights: 0, total: 0 };
+    const n = Math.ceil(diff / 86_400_000);
+    return { nights: n, total: n * activeRoom.price };
+  }, [checkIn, checkOut, activeRoom]);
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const phoneDigits = hotel.phone.replace(/\D/g, '');
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !checkIn || !checkOut || !roomId) {
-      setInfoAlert('Please complete all required fields.');
+      setAlert('Please complete all required fields.');
       return;
     }
-
     if (new Date(checkOut) <= new Date(checkIn)) {
-      setInfoAlert('Check-out date must occur after the check-in date.');
+      setAlert('Check-out must be after check-in.');
       return;
     }
-
-    onAddInquiry({
-      name,
-      email,
-      check_in: checkIn,
-      check_out: checkOut,
-      guests,
-      message,
-      room_id: roomId
-    });
-
+    onAddInquiry({ name, email, check_in: checkIn, check_out: checkOut, guests, message, room_id: roomId });
     setSubmitted(true);
-    setInfoAlert(null);
-    setTimeout(() => {
-      setName('');
-      setEmail('');
-      setCheckIn('');
-      setCheckOut('');
-      setGuests(2);
-      setMessage('');
-      setSubmitted(false);
-    }, 4000);
+    setAlert(null);
   };
 
-  const handleWhatsApp = () => {
-    const textMsg = `Hi, I'm interested in booking the ${activeRoom ? activeRoom.name : 'resort room'} for ${nights || 3} nights.`;
-    window.open(`https://wa.me/85569260405?text=${encodeURIComponent(textMsg)}`, '_blank');
+  const reset = () => {
+    setName('');
+    setEmail('');
+    setCheckIn('');
+    setCheckOut('');
+    setGuests(2);
+    setMessage('');
+    setSubmitted(false);
   };
 
-  const handleCall = () => {
-    setInfoAlert('Opening Dial Phone: Call +855 69 260 405 to reach the front concierge desk.');
-    setTimeout(() => setInfoAlert(null), 5000);
+  const whatsapp = () => {
+    const text = `Hi, I'm interested in booking the ${activeRoom ? activeRoom.name : 'resort'} for ${nights || 3} nights.`;
+    window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   };
 
   return (
-    <div id="booking-section" className="bg-brand-charcoal text-stone-100 rounded-[32px] p-6 md:p-8 lg:p-10 border border-brand-charcoal shadow-xl relative overflow-hidden">
-      
-      {/* Decorative ambient visual background */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-brand-sage/10 rounded-full blur-3xl -z-10 pointer-events-none" />
-      
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* Left column: Contact Info & Pricing Breakdowns */}
-        <div className="lg:col-span-5 flex flex-col justify-between">
-          <div>
-            <span className="text-white bg-brand-sage/30 border border-brand-sage/20 text-[10px] font-semibold tracking-wider uppercase px-3 py-1 rounded-full inline-block mb-3">
-              Inquire & Booking
-            </span>
-            <h3 className="text-2xl md:text-3xl font-sans font-medium text-white tracking-tight mb-4">
-              Reserve Your Bespoke Coastal Retreat
-            </h3>
-            <p className="text-stone-300 text-xs md:text-sm leading-relaxed mb-6">
-              Our reservation leads are processed within 2 hours. Submit a custom inquiry below or connect instantly with our around-the-clock resort concierge.
-            </p>
+    <div id="booking-section" className="grid gap-10 lg:grid-cols-12 lg:gap-14">
+      {/* Left: contact + live estimate */}
+      <div className="flex flex-col gap-8 lg:col-span-5">
+        <p className="lead max-w-md text-sand/75">
+          Requests are answered within two hours. Send an enquiry below, or talk to the concierge directly – there is always someone awake.
+        </p>
 
-            {/* Concierge channels details */}
-            <div className="space-y-4 text-xs md:text-sm font-sans mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-brand-sand-dark">
-                  <Phone className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-stone-400 text-[10px] uppercase font-mono">Concierge Line</div>
-                  <button onClick={handleCall} className="text-white hover:text-brand-sand-dark transition-colors cursor-pointer text-left font-sans font-semibold">
-                    +855 69 260 405
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-brand-sand-dark">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-stone-400 text-[10px] uppercase font-mono">Inquiry Mail</div>
-                  <a href="mailto:chesthareahtan@gmail.com" className="text-white hover:text-brand-sand-dark transition-colors font-sans font-semibold font-normal">
-                    chesthareahtan@gmail.com
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+        <ul className="grid gap-4 text-sm">
+          <li>
+            <a href={`tel:${hotel.phone.replace(/[^+\d]/g, '')}`} className="group flex items-center gap-4">
+              <span className="grid h-11 w-11 place-items-center rounded-full border border-sand/20 transition-colors group-hover:bg-sun group-hover:text-ink"><Phone className="h-4 w-4" /></span>
+              <span><span className="eyebrow block">Concierge line</span><span className="font-semibold">{hotel.phone}</span></span>
+            </a>
+          </li>
+          <li>
+            <a href={`mailto:${hotel.email}`} className="group flex items-center gap-4">
+              <span className="grid h-11 w-11 place-items-center rounded-full border border-sand/20 transition-colors group-hover:bg-sun group-hover:text-ink"><Mail className="h-4 w-4" /></span>
+              <span><span className="eyebrow block">Enquiries</span><span className="break-all font-semibold">{hotel.email}</span></span>
+            </a>
+          </li>
+        </ul>
 
-          {/* Pricing Estimate Card */}
+        <div className="rounded-[1.5rem] border hairline bg-ink-2 p-5 md:p-6" aria-live="polite">
+          <div className="mb-3 flex items-center gap-2"><CreditCard className="h-4 w-4 text-sun" /><h3 className="eyebrow !text-sand">Estimated stay</h3></div>
           <AnimatePresence mode="wait">
             {activeRoom ? (
-              <motion.div 
-                key={activeRoom.id}
-                initial={{ opacity: 0, scale: 0.96, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.96, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white/5 border border-white/10 rounded-[24px] p-5 md:p-6 mt-auto"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <CreditCard className="w-4 h-4 text-brand-sand-dark" />
-                  <h4 className="text-xs font-mono uppercase tracking-widest text-[#e2e2d8] font-bold">Estimated Stay Rates</h4>
+              <motion.div key={activeRoom.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="text-sm text-sand/85">{activeRoom.name}</span>
+                  <span className="font-mono text-xs text-sand/60">${activeRoom.price} / night</span>
                 </div>
-                
-                <div className="flex justify-between items-baseline mb-2">
-                  <span className="text-xs text-stone-300">{activeRoom.name}</span>
-                  <span className="text-xs font-mono text-stone-400">${activeRoom.price} / night</span>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {nights > 0 ? (
-                    <motion.div 
-                      key="summary-filled"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-1 bg-black/20 p-3 rounded-lg border border-white/5 overflow-hidden"
-                    >
-                      <div className="flex justify-between text-xs text-stone-300">
-                        <span>Duration:</span>
-                        <span className="font-mono text-stone-300">{nights} nights</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-stone-300">
-                        <span>Local Tax & Service:</span>
-                        <span className="font-mono text-stone-300">Complimentary</span>
-                      </div>
-                      <div className="border-t border-white/10 my-2 pt-2 flex justify-between items-baseline">
-                        <span className="text-xs font-semibold text-white">Estimated Total:</span>
-                        <span className="text-lg font-sans font-bold text-white">${totalPrice}</span>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.p 
-                      key="summary-empty"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-[11px] text-brand-sand-dark italic font-sans leading-relaxed"
-                    >
-                      💡 Select Check-In / Check-Out dates on the right to simulate live price computations.
-                    </motion.p>
-                  )}
-                </AnimatePresence>
+                {nights > 0 ? (
+                  <div className="mt-4 grid gap-1.5 border-t hairline pt-4 text-sm">
+                    <div className="flex justify-between text-sand/70"><span>Duration</span><span className="font-mono">{nights} night{nights > 1 ? 's' : ''}</span></div>
+                    <div className="flex justify-between text-sand/70"><span>Local tax &amp; service</span><span className="font-mono">Included</span></div>
+                    <div className="mt-2 flex items-baseline justify-between"><span className="font-semibold">Estimated total</span><span className="display text-4xl !leading-none">${total}</span></div>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs italic text-sand/55">Choose check-in and check-out dates to see your total.</p>
+                )}
               </motion.div>
             ) : (
-              <motion.div 
-                key="no-room"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="bg-white/5 border border-white/10 rounded-[24px] p-5 text-center text-xs text-stone-450 italic"
-              >
-                Select an accommodation option on the right to review customized service quotes.
-              </motion.div>
+              <motion.p key="none" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs italic text-sand/55">Select a suite to see a quote.</motion.p>
             )}
           </AnimatePresence>
         </div>
+      </div>
 
-        {/* Right column: The Form itself */}
-        <div className="lg:col-span-7 bg-[#1e1e1c]/40 border border-white/10 p-6 md:p-8 rounded-[24px] backdrop-blur-xs">
-          {submitted ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center h-full">
-              <div className="w-12 h-12 bg-white/10 text-brand-sand-dark rounded-full flex items-center justify-center border border-white/15 mb-4 animate-bounce">
-                <Check className="w-6 h-6" />
-              </div>
-              <h4 className="text-white font-sans font-medium text-lg mb-2">Request Transmitted Successfully</h4>
-              <p className="text-[#e2e2d8] text-xs font-serif leading-relaxed max-w-sm">
-                "Our reservation stewards have received your inquiry for the {activeRoom?.name}. A formal confirmation proposal has been issued to your email registry."
-              </p>
-              <p className="text-stone-450 text-[11px] mt-4 font-mono">
-                Click Staff Portal above to review your inquiry details live!
-              </p>
+      {/* Right: the form */}
+      <div className="rounded-[1.75rem] border hairline bg-ink-2/70 p-6 md:rounded-[2.25rem] md:p-10 lg:col-span-7">
+        {submitted ? (
+          <div className="flex h-full min-h-[22rem] flex-col items-center justify-center text-center">
+            <span className="mb-5 grid h-14 w-14 place-items-center rounded-full bg-sun text-ink"><Check className="h-7 w-7" /></span>
+            <h3 className="display text-3xl">Request received</h3>
+            <p className="serif-i mt-3 max-w-sm text-xl text-sand/80">
+              “Our reservations team has your enquiry{activeRoom ? ` for the ${activeRoom.name}` : ''} and will be in touch by email shortly.”
+            </p>
+            <button onClick={reset} className="btn btn--ghost mt-8">Make another request</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="grid gap-7">
+            {alert && <div role="alert" className="rounded-xl border border-ember/40 bg-ember/10 px-4 py-3 text-sm text-ember">{alert}</div>}
+
+            <div className="field">
+              <label htmlFor="bk-room">Accommodation *</label>
+              <select id="bk-room" required value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+                <option value="" disabled>Select a suite or villa</option>
+                {rooms.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name} — ${r.price} / night</option>
+                ))}
+              </select>
             </div>
-          ) : (
-            <form onSubmit={handleBookingSubmit} className="space-y-4">
-              {infoAlert && (
-                <div role="alert" className="p-3.5 bg-rose-500/15 border border-rose-500/20 text-rose-300 rounded-[12px] text-xs font-sans">
-                  {infoAlert}
-                </div>
-              )}
 
-              {/* Room Selection Dropdown */}
-              <div>
-                <label className="block text-stone-400 text-[10px] uppercase font-mono tracking-wider mb-1.5 font-bold">
-                  Accommodation Selection <span className="text-rose-400">*</span>
-                </label>
-                <select
-                  required
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value)}
-                  className="w-full text-white bg-brand-charcoal border border-white/10 focus:border-brand-sage px-3 py-2.5 rounded-xl text-xs md:text-sm font-sans outline-hidden cursor-pointer"
-                >
-                  <option value="" disabled>--- Select a Luxury Room ---</option>
-                  {rooms.map((room) => (
-                    <option key={room.id} value={room.id} className="bg-brand-charcoal text-white">
-                      {room.name} (${room.price} / night)
-                    </option>
-                  ))}
+            <div className="grid gap-7 md:grid-cols-2">
+              <div className="field">
+                <label htmlFor="bk-name">Full name *</label>
+                <input id="bk-name" required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+              </div>
+              <div className="field">
+                <label htmlFor="bk-email">Email *</label>
+                <input id="bk-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+              </div>
+            </div>
+
+            <div className="grid gap-7 sm:grid-cols-3">
+              <div className="field">
+                <label htmlFor="bk-in">Check-in *</label>
+                <input id="bk-in" type="date" required min={isoToday()} value={checkIn} onChange={(e) => { setCheckIn(e.target.value); if (checkOut && checkOut <= e.target.value) setCheckOut(''); }} />
+              </div>
+              <div className="field">
+                <label htmlFor="bk-out">Check-out *</label>
+                <input id="bk-out" type="date" required min={checkIn ? addDays(checkIn, 1) : isoToday()} value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="bk-guests">Guests</label>
+                <select id="bk-guests" value={guests} onChange={(e) => setGuests(parseInt(e.target.value, 10))}>
+                  {[1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n} {n === 1 ? 'guest' : 'guests'}</option>)}
                 </select>
               </div>
+            </div>
 
-              {/* Basic Contact Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-stone-400 text-[10px] uppercase font-mono tracking-wider mb-1.5 font-bold">
-                    Full Name <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Grand Duke Harrison"
-                    className="w-full text-white bg-brand-charcoal border border-white/10 focus:border-brand-sage px-3 py-2.5 rounded-xl text-xs md:text-sm font-sans outline-hidden"
-                  />
-                </div>
-                <div>
-                  <label className="block text-stone-400 text-[10px] uppercase font-mono tracking-wider mb-1.5 font-bold">
-                    Email Address <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="harrison@estate.com"
-                    className="w-full text-white bg-brand-charcoal border border-white/10 focus:border-brand-sage px-3 py-2.5 rounded-xl text-xs md:text-sm font-sans outline-hidden"
-                  />
-                </div>
-              </div>
+            <div className="field">
+              <label htmlFor="bk-msg">Anything we should know?</label>
+              <textarea id="bk-msg" rows={2} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Celebrations, dietary needs, transfers, a high floor…" />
+            </div>
 
-              {/* Check in / Check out / Guests */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-stone-400 text-[10px] uppercase font-mono tracking-wider mb-1.5 font-bold">
-                    <Calendar className="w-3 h-3 text-stone-400 inline mr-1" /> Check-In <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="w-full text-white bg-brand-charcoal border border-white/10 focus:border-brand-sage px-3 py-2.5 rounded-xl text-xs font-sans outline-hidden cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-stone-400 text-[10px] uppercase font-mono tracking-wider mb-1.5 font-bold">
-                    <Calendar className="w-3 h-3 text-stone-400 inline mr-1" /> Check-Out <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="w-full text-white bg-brand-charcoal border border-white/10 focus:border-brand-sage px-3 py-2.5 rounded-xl text-xs font-sans outline-hidden cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-stone-400 text-[10px] uppercase font-mono tracking-wider mb-1.5 font-bold">
-                    <Users className="w-3 h-3 text-stone-400 inline mr-1" /> Total Guests <span className="text-rose-400">*</span>
-                  </label>
-                  <select
-                    value={guests}
-                    onChange={(e) => setGuests(parseInt(e.target.value))}
-                    className="w-full text-white bg-brand-charcoal border border-white/10 focus:border-brand-sage px-3 py-2.5 rounded-xl text-xs font-sans outline-hidden cursor-pointer"
-                  >
-                    {[1, 2, 3, 4, 5, 6].map((num) => (
-                      <option key={num} value={num} className="bg-brand-charcoal text-white">
-                        {num} {num === 1 ? 'Guest' : 'Guests'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Special Concierge requests text */}
-              <div>
-                <label className="block text-stone-400 text-[10px] uppercase font-mono tracking-wider mb-1.5 font-bold">
-                  Special Concierge Desires / Message
-                </label>
-                <textarea
-                  rows={2}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="e.g. Helicopter pad pickup coordinates, diet limitations, private cellars preferences, or high-floor requests..."
-                  className="w-full text-white bg-brand-charcoal border border-white/10 focus:border-brand-sage p-3 rounded-xl text-xs font-sans outline-hidden resize-none"
-                />
-              </div>
-
-              {/* Submit triggers and prompt guides */}
-              <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-brand-sage hover:bg-brand-sage-hover text-white text-xs md:text-sm font-sans tracking-wide uppercase px-5 py-3 rounded-full transition-all font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  <CheckSquare className="w-4 h-4" /> Transmit Inquire Booking
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={handleWhatsApp}
-                  className="border border-white/10 hover:border-brand-sage text-[#e2e2d8] hover:text-white hover:bg-white/5 text-xs font-sans tracking-wide uppercase px-5 py-3 rounded-full transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  WhatsApp Instant
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-
+            <div className="flex flex-col gap-3 border-t hairline pt-7 sm:flex-row">
+              <button type="submit" className="btn flex-1"><Send className="h-4 w-4" /> Send enquiry</button>
+              <button type="button" onClick={whatsapp} className="btn btn--ghost"><MessageCircle className="h-4 w-4" /> WhatsApp</button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

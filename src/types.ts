@@ -10,6 +10,7 @@ export interface Hotel {
   address: string;
   phone: string;
   email: string;
+  /** Optional. Hero is a live 3D scene; this is only used as a social-share / no-WebGL poster. */
   hero_image: string;
   tagline: string;
 }
@@ -22,6 +23,7 @@ export interface Room {
   price: number;
   capacity: number;
   size: number; // in m²
+  /** Photo URL. Empty string → descriptive placeholder is shown. */
   image: string;
   amenities: string[]; // standard amenity list for this room
 }
@@ -34,6 +36,7 @@ export interface Amenity {
 
 export interface GalleryItem {
   id: string;
+  /** Photo URL. Empty string → descriptive placeholder is shown. */
   image_url: string;
   category: 'Rooms' | 'Lobby' | 'Pool' | 'Restaurant' | 'Exterior';
 }
