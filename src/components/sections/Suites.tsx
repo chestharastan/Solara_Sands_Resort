@@ -75,6 +75,7 @@ function SuiteCard({
             label={room.name}
             kind={ROOM_SLOT.kind}
             spec={ROOM_SLOT.spec}
+            sizes={ROOM_SLOT.sizes}
             tone={index % 2 ? 'sea' : 'sand'}
           />
         </ZoomFrame>

@@ -37,7 +37,7 @@ export const INITIAL_ROOMS: Room[] = [
     price: 189,
     capacity: 2,
     size: 42,
-    image: '',
+    image: '/media/room-ocean-king-1280.webp',
     amenities: ['wifi', 'breakfast', 'reception', 'parking']
   },
   {
@@ -48,7 +48,7 @@ export const INITIAL_ROOMS: Room[] = [
     price: 320,
     capacity: 3,
     size: 68,
-    image: '',
+    image: '/media/room-sky-terrace-1280.webp',
     amenities: ['wifi', 'pool', 'dining', 'breakfast', 'reception', 'parking']
   },
   {
@@ -59,7 +59,7 @@ export const INITIAL_ROOMS: Room[] = [
     price: 549,
     capacity: 4,
     size: 110,
-    image: '',
+    image: '/media/room-pool-villa-1280.webp',
     amenities: ['wifi', 'pool', 'dining', 'shuttle', 'spa', 'breakfast', 'reception', 'parking']
   },
   {
@@ -70,42 +70,28 @@ export const INITIAL_ROOMS: Room[] = [
     price: 149,
     capacity: 2,
     size: 38,
-    image: '',
+    image: '/media/room-vista-twin-1280.webp',
     amenities: ['wifi', 'breakfast', 'reception', 'parking']
   }
 ];
 
+/**
+ * Gallery seed. Photos live in public/media (see public/media/CREDITS.md); every file has a -640 sibling
+ * that <MediaSlot/> uses automatically for small screens. Replace or extend from the Staff Portal.
+ */
 export const INITIAL_GALLERY: GalleryItem[] = [
-  {
-    id: 'g_1',
-    image_url: '',
-    category: 'Rooms'
-  },
-  {
-    id: 'g_2',
-    image_url: '',
-    category: 'Lobby'
-  },
-  {
-    id: 'g_3',
-    image_url: '',
-    category: 'Pool'
-  },
-  {
-    id: 'g_4',
-    image_url: '',
-    category: 'Restaurant'
-  },
-  {
-    id: 'g_5',
-    image_url: '',
-    category: 'Exterior'
-  },
-  {
-    id: 'g_6',
-    image_url: '',
-    category: 'Exterior'
-  }
+  { id: 'g_1', image_url: '/media/gallery-pool-1280.webp', category: 'Pool' },
+  { id: 'g_2', image_url: '/media/gallery-lobby-grand-1280.webp', category: 'Lobby' },
+  { id: 'g_3', image_url: '/media/gallery-plates-1280.webp', category: 'Restaurant' },
+  { id: 'g_4', image_url: '/media/room-ocean-king-1280.webp', category: 'Rooms' },
+  { id: 'g_5', image_url: '/media/gallery-sail-1280.webp', category: 'Exterior' },
+  { id: 'g_6', image_url: '/media/gallery-umbrellas-1280.webp', category: 'Exterior' },
+  { id: 'g_7', image_url: '/media/gallery-table-rocks-1280.webp', category: 'Restaurant' },
+  { id: 'g_8', image_url: '/media/gallery-lobby-fireplace-1280.webp', category: 'Lobby' },
+  { id: 'g_9', image_url: '/media/gallery-terrace-1280.webp', category: 'Exterior' },
+  { id: 'g_10', image_url: '/media/gallery-beach-aerial-1280.webp', category: 'Exterior' },
+  { id: 'g_11', image_url: '/media/gallery-sunset-reflection-1280.webp', category: 'Exterior' },
+  { id: 'g_12', image_url: '/media/gallery-pier-sunburst-1280.webp', category: 'Exterior' },
 ];
 
 export const INITIAL_REVIEWS: Review[] = [

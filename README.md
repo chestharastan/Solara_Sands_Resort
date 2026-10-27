@@ -1,6 +1,6 @@
 # Solara Sands Resort
 
-A cinematic, scroll-driven resort website: a live **WebGL sunrise-to-night journey** around a private island, an **explorable 3D island**, parallax and zoom storytelling, a booking flow and a staff portal. It is built to feel smooth on a phone as well as a desktop, and it is **ready for photography and film to be dropped in** – nothing in the layout has to change.
+A cinematic, scroll-driven resort website: a live **WebGL sunrise-to-night journey** around a private island, an **explorable 3D island**, parallax and zoom storytelling, a booking flow and a staff portal. It is built to feel smooth on a phone as well as a desktop, and it uses responsive, lazy-loaded photography (stand-ins today, easy to replace with the resort's own).
 
 React 19 · TypeScript · Vite · Tailwind CSS v4 · Three.js · Motion · Lenis
 
@@ -34,24 +34,18 @@ Optional: set `GOOGLE_MAPS_PLATFORM_KEY` in `.env.local` to show a live Google m
 | 09 | Reserve | Booking form with live price estimate |
 | – | Staff portal | Edit suites, prices, gallery, amenities, hotel profile, inquiries (lazy-loaded; opened from the menu or footer) |
 
-## Dropping in photography and video
+## Photography and video
 
-No real media ships with the site. Every photo/video position renders a **descriptive placeholder** that states the subject, aspect ratio, pixel size and format to deliver.
+The site ships with **stand-in photography** from Pexels (free for commercial use; sources in [`public/media/CREDITS.md`](public/media/CREDITS.md)). Swap in the resort's own photos before launch – nothing in the layout has to change.
 
-**Static slots** (story, day chapters, experiences, island hotspots) live in one file: [`src/content/media.ts`](src/content/media.ts).
+* **Format:** every image exists twice, `name-640.webp` and `name-1280.webp`, in `public/media/`. `<MediaSlot/>` builds the `srcset` from the `-1280` path automatically, so phones download the small file (a full scroll is ~1.2 MB on a standard screen, only what you scroll to is fetched, and images fade in over a tinted background so nothing pops).
+* **Static slots** (story, day chapters, experiences, island hotspots) are listed in [`src/content/media.ts`](src/content/media.ts). To replace one: export `my-photo-640.webp` + `my-photo-1280.webp` into `public/media/` and point `src` at `/media/my-photo-1280.webp`.
+* **Data-driven slots** – suites and gallery tiles – are seeded in [`src/data.ts`](src/data.ts) and editable in the **Staff Portal** (paste an image URL).
+* **Video:** set `kind: 'video'` and `src` to an MP4 (+ `poster`). Videos are muted, loop, only play while on screen, and show their poster under *prefers-reduced-motion*.
+* **Empty or broken `src`** renders a *descriptive placeholder* (what to shoot, ratio, size, format) instead of a broken-image icon – useful for adding a new slot before its photo exists.
+* **Share image:** add `<meta property="og:image" …>` in `index.html` (a comment marks the spot).
 
-1. Put the file in `public/media/`, e.g. `public/media/chapter-midday.mp4`.
-2. Set its `src` (and `poster` for video) in `MEDIA`:
-   ```ts
-   chapterMidday: { kind: 'video', src: '/media/chapter-midday.mp4', poster: '/media/chapter-midday.jpg', … }
-   ```
-3. That's it. The box, aspect ratio, lazy loading, parallax/zoom and hover effects are already wired. Videos are muted/looping, only play while on screen, and show their poster under *prefers-reduced-motion*.
-
-**Data-driven slots** – suites and gallery tiles – are edited in the **Staff Portal** (paste an image URL) or seeded in [`src/data.ts`](src/data.ts) (`room.image`, `gallery[].image_url`). An empty or broken URL falls back to the placeholder.
-
-**Share image** – add `<meta property="og:image" …>` in `index.html` (a comment marks the spot).
-
-Recommended delivery: AVIF/WebP photos at 2× the largest displayed size; MP4 (H.264) + WebM, ≤ 6 MB, 8–12 s seamless loops.
+Recommended delivery for new photography: AVIF/WebP at 640 and 1280 px wide (2400 px if you want a larger lightbox); MP4 (H.264) + WebM, ≤ 6 MB, 8–12 s seamless loops.
 
 ## How the 3D works
 

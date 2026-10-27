@@ -225,16 +225,16 @@ export function createIslandScene({ container, profile }: IslandSceneOptions): I
     vel: 0,
     pitch: 0.5, // radians above the horizon
     pitchTarget: 0.5,
-    dist: 56,
-    distTarget: 56,
+    dist: 42,
+    distTarget: 42,
     focusId: null as string | null,
     dragging: false,
     lastX: 0,
     lastY: 0,
     idle: 0,
   };
-  const BASE_DIST = 56;
-  const FOCUS_DIST = 38;
+  const BASE_DIST = 42;
+  const FOCUS_DIST = 30;
 
   const onDown = (e: PointerEvent) => {
     if ((e.target as HTMLElement).closest('[data-hotspot]')) return;

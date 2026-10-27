@@ -14,7 +14,8 @@ import { getDevice } from '../../lib/device';
  *  • No `src`  → renders a *descriptive placeholder* (what to shoot, aspect ratio,
  *                pixel size, format) so the layout is final before content exists.
  *  • With `src` → renders the real <img>/<video>, lazy-loaded, with the same box,
- *                so uploading media never causes layout shift.
+ *                so uploading media never causes layout shift. Images fade in over the
+ *                slot's tinted background and use a responsive `srcset` (see media.ts).
  *  • A broken URL (e.g. a typo in the Staff Portal) falls back to the placeholder
  *    instead of showing a broken-image icon.
  *
@@ -26,6 +27,8 @@ export interface MediaSlotProps {
   kind?: MediaSpec['kind'];
   src?: string;
   poster?: string;
+  /** `sizes` hint for the responsive image – how wide this slot renders. */
+  sizes?: string;
   alt: string;
   label: string;
   spec: string;
@@ -43,6 +46,7 @@ export default function MediaSlot({
   kind = 'image',
   src,
   poster,
+  sizes,
   alt,
   label,
   spec,
@@ -53,11 +57,18 @@ export default function MediaSlot({
   priority,
 }: MediaSlotProps) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasMedia = Boolean(src) && !failed;
 
-  // Reset the error state if the source changes (e.g. staff fixes the URL).
-  useEffect(() => setFailed(false), [src]);
+  // Files named `x-1280.webp` have a sibling `x-640.webp` → let the browser pick (phones get the small one).
+  const srcSet = src && /-1280\.webp$/.test(src) ? `${src.replace(/-1280\.webp$/, '-640.webp')} 640w, ${src} 1280w` : undefined;
+
+  // Reset state if the source changes (e.g. staff fixes the URL).
+  useEffect(() => {
+    setFailed(false);
+    setLoaded(false);
+  }, [src]);
 
   // Play videos only while visible.
   useEffect(() => {
@@ -102,12 +113,20 @@ export default function MediaSlot({
           </video>
         ) : (
           <img
-            className="media-fill"
+            // Cached images can finish before React attaches onLoad, so also check `complete`.
+            ref={(el) => {
+              if (el?.complete && el.naturalWidth > 0) setLoaded(true);
+            }}
+            className="media-fill transition-opacity duration-700"
+            style={{ opacity: loaded ? 1 : 0 }}
             src={src}
+            srcSet={srcSet}
+            sizes={srcSet ? sizes ?? '(min-width: 1024px) 50vw, 100vw' : undefined}
             alt={alt}
             loading={priority ? 'eager' : 'lazy'}
             decoding="async"
             referrerPolicy="no-referrer"
+            onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
           />
         )

@@ -32,8 +32,11 @@ function load<T>(key: string, fallback: T): T {
   }
 }
 
-function usePersisted<T>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(() => load(key, initial));
+function usePersisted<T>(key: string, initial: T, migrate?: (stored: T) => T) {
+  const [value, setValue] = useState<T>(() => {
+    const stored = load(key, initial);
+    return migrate ? migrate(stored) : stored;
+  });
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
@@ -44,11 +47,28 @@ function usePersisted<T>(key: string, initial: T) {
   return [value, setValue] as const;
 }
 
+/**
+ * Earlier builds shipped without photos, so a returning visitor's saved suites/gallery can contain empty
+ * image fields. Fill those from the current seed – but never touch anything staff have set themselves.
+ */
+const fillRoomPhotos = (rooms: Room[]): Room[] =>
+  rooms.map((r) => {
+    const seed = INITIAL_ROOMS.find((s) => s.id === r.id);
+    return !r.image && seed?.image ? { ...r, image: seed.image } : r;
+  });
+
+const fillGalleryPhotos = (items: GalleryItem[]): GalleryItem[] => {
+  if (!items.some((i) => !i.image_url)) return items;
+  // Legacy photo-less seed items are replaced by the current seed; staff-added photos are kept.
+  const seedIds = new Set(INITIAL_GALLERY.map((g) => g.id));
+  return [...INITIAL_GALLERY, ...items.filter((i) => i.image_url && !seedIds.has(i.id))];
+};
+
 export function useResortData() {
   const [hotel, setHotel] = usePersisted<Hotel>('solara_hotel', INITIAL_HOTEL);
-  const [rooms, setRooms] = usePersisted<Room[]>('solara_rooms', INITIAL_ROOMS);
+  const [rooms, setRooms] = usePersisted<Room[]>('solara_rooms', INITIAL_ROOMS, fillRoomPhotos);
   const [amenities, setAmenities] = usePersisted<Amenity[]>('solara_amenities', INITIAL_AMENITIES);
-  const [gallery, setGallery] = usePersisted<GalleryItem[]>('solara_gallery', INITIAL_GALLERY);
+  const [gallery, setGallery] = usePersisted<GalleryItem[]>('solara_gallery', INITIAL_GALLERY, fillGalleryPhotos);
   const [reviews, setReviews] = usePersisted<Review[]>('solara_reviews', INITIAL_REVIEWS);
   const [inquiries, setInquiries] = usePersisted<BookingInquiry[]>('solara_inquiries', INITIAL_INQUIRIES);
 

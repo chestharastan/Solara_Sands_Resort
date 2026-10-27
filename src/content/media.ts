@@ -4,22 +4,24 @@
  */
 
 /**
- * MEDIA MANIFEST – the single place to plug in photography and film.
+ * MEDIA MANIFEST – the single place that says which photo/video goes where.
  *
- * No real media ships with the site. Every slot below renders a descriptive
- * placeholder (see <MediaSlot/>) that tells the content team exactly what to
- * upload: subject, aspect ratio, size and format.
+ * Photography ships in `public/media/` (sources and licence: `public/media/CREDITS.md`). Every image
+ * exists in two widths – `name-640.webp` and `name-1280.webp` – and <MediaSlot/> automatically builds a
+ * `srcset` from the 1280 file, so phones download the small one.
  *
- * To go live with a slot:
- *   1. Drop the file into `public/media/` (e.g. `public/media/story-a.avif`).
- *   2. Set `src` below to its public path (`'/media/story-a.avif'`).
- *      For video also set `poster` (a still frame shown before playback).
- *   3. Done – the layout, aspect ratio, lazy loading, parallax and zoom effects
- *      are already wired. Nothing else in the code needs to change.
+ * Replacing a photo:
+ *   1. Export two WebP/AVIF files, `my-photo-640.webp` and `my-photo-1280.webp`, into `public/media/`.
+ *   2. Point `src` below at `/media/my-photo-1280.webp`.
  *
- * Suites and gallery tiles are *data-driven* (editable in the Staff Portal) –
- * paste an image URL there, or set `image`/`image_url` in `src/data.ts`.
- * `ROOM_SLOT` / `GALLERY_SLOT` below only describe what the placeholders say.
+ * Video: set `kind: 'video'`, `src` to an MP4 (plus `poster`). Videos are muted, loop, and only play
+ * while on screen.
+ *
+ * Leave `src` empty and the slot renders a *descriptive placeholder* (what to shoot, ratio, size,
+ * format) – handy for adding new slots before the content exists.
+ *
+ * Suites and gallery tiles are data-driven: edit them in the Staff Portal, or seed them in
+ * `src/data.ts` (`room.image`, `gallery[].image_url`). Those follow the same file convention.
  */
 
 export type MediaKind = 'image' | 'video';
@@ -31,7 +33,9 @@ export interface MediaSpec {
   src?: string;
   /** Video only: still frame displayed until playback starts. */
   poster?: string;
-  /** Accessible description of the *finished* media (used as alt text once uploaded). */
+  /** `sizes` attribute for the responsive image (how wide the slot renders). */
+  sizes?: string;
+  /** Accessible description of the media (used as alt text). */
   alt: string;
   /** Short title shown on the placeholder. */
   label: string;
@@ -41,48 +45,62 @@ export interface MediaSpec {
   tone?: MediaTone;
 }
 
+const img = (slug: string) => `/media/${slug}-1280.webp`;
+
 export const MEDIA = {
-  /* --- The idea ---------------------------------------------------------- */
+  /* --- The idea (shown beside the Experiences intro) -------------------- */
   storyA: {
     kind: 'image',
-    alt: 'Guests walking along the shoreline in warm morning light',
+    src: img('story-shoreline'),
+    sizes: '(min-width: 768px) 20vw, 60vw',
+    alt: 'A terrace above the beach at first light, thatched umbrellas below and a pink sky over the sea',
     label: 'Shoreline at first light',
     spec: 'Portrait 4:5 · 2000×2500 · AVIF/WebP',
     tone: 'sand',
   },
   storyB: {
-    kind: 'video',
-    alt: 'Slow aerial pass over the resort and the lagoon',
+    kind: 'image',
+    src: img('story-aerial'),
+    sizes: '(min-width: 768px) 24vw, 80vw',
+    alt: 'Aerial view of a beachfront resort among palm trees',
     label: 'Aerial resort pass',
-    spec: 'Landscape 16:9 · 1920×1080 · MP4 + WebM · 8–12s loop · ≤ 6 MB',
+    spec: 'Landscape 16:9 · 1920×1080 · AVIF/WebP (or MP4 + WebM · 8–12s loop)',
     tone: 'sea',
   },
 
   /* --- A day at Solara (one per chapter) --------------------------------- */
   chapterMorning: {
     kind: 'image',
-    alt: 'Breakfast terrace overlooking the water',
-    label: 'Morning · breakfast terrace',
+    src: img('chapter-morning'),
+    sizes: '(min-width: 768px) 28rem, 90vw',
+    alt: 'A guest meditating on the sand at sunrise',
+    label: 'Morning · sunrise on the shore',
     spec: 'Landscape 3:2 · 2400×1600 · AVIF/WebP',
     tone: 'sand',
   },
   chapterMidday: {
-    kind: 'video',
-    alt: 'Swimmers in the infinity pool at midday',
+    kind: 'image',
+    src: img('chapter-midday'),
+    sizes: '(min-width: 768px) 28rem, 90vw',
+    alt: 'An infinity pool with thatched umbrellas reflecting a blue sky',
     label: 'Midday · infinity pool',
-    spec: 'Landscape 3:2 · 1600×1066 · MP4 + WebM · 6–10s loop',
+    spec: 'Landscape 3:2 · 2400×1600 · AVIF/WebP (or MP4 + WebM · 6–10s loop)',
     tone: 'sea',
   },
   chapterGolden: {
     kind: 'image',
-    alt: 'Golden hour on the rooftop lounge',
-    label: 'Golden hour · rooftop lounge',
+    src: img('chapter-golden'),
+    sizes: '(min-width: 768px) 28rem, 90vw',
+    alt: 'Sun loungers beside an infinity pool at sunset over the water',
+    label: 'Golden hour · poolside lounge',
     spec: 'Landscape 3:2 · 2400×1600 · AVIF/WebP',
     tone: 'dusk',
   },
   chapterNight: {
     kind: 'image',
-    alt: 'Candle-lit dinner on the water’s edge',
+    src: img('chapter-night'),
+    sizes: '(min-width: 768px) 28rem, 90vw',
+    alt: 'A candle-lit table with wine glasses set for dinner at night',
     label: 'Night · chef’s table',
     spec: 'Landscape 3:2 · 2400×1600 · AVIF/WebP',
     tone: 'ink',
@@ -91,32 +109,78 @@ export const MEDIA = {
   /* --- Experiences -------------------------------------------------------- */
   expWellness: {
     kind: 'image',
-    alt: 'Hydrotherapy spa and meditation deck',
+    src: img('exp-wellness'),
+    sizes: '(min-width: 768px) 30vw, 100vw',
+    alt: 'A massage therapist at work beside candles and dried lavender',
     label: 'Water & wellness',
     spec: 'Portrait 4:5 · 1600×2000 · AVIF/WebP',
     tone: 'sea',
   },
   expDining: {
     kind: 'image',
-    alt: 'Seasonal tasting menu plated by the chef',
+    src: img('exp-dining'),
+    sizes: '(min-width: 768px) 30vw, 100vw',
+    alt: 'A chef’s hands plating a dish with tweezers',
     label: 'Dining',
     spec: 'Portrait 4:5 · 1600×2000 · AVIF/WebP',
     tone: 'dusk',
   },
   expJourneys: {
     kind: 'image',
-    alt: 'Private sea transfer to a nearby cove',
+    src: img('exp-journeys'),
+    sizes: '(min-width: 768px) 30vw, 100vw',
+    alt: 'A wooden pier stretching out over calm water at dusk',
     label: 'Journeys & concierge',
     spec: 'Portrait 4:5 · 1600×2000 · AVIF/WebP',
     tone: 'sand',
   },
 
   /* --- Island explorer hotspots ------------------------------------------ */
-  hotspotVillas: { kind: 'image', alt: 'Private pool villa exterior', label: 'Pool villas', spec: 'Landscape 16:10 · 1600×1000', tone: 'sand' },
-  hotspotPool: { kind: 'image', alt: 'Infinity pool at sunset', label: 'Infinity pool', spec: 'Landscape 16:10 · 1600×1000', tone: 'sea' },
-  hotspotBeach: { kind: 'image', alt: 'Beach club loungers and thatched bar', label: 'Beach club', spec: 'Landscape 16:10 · 1600×1000', tone: 'sand' },
-  hotspotSpa: { kind: 'image', alt: 'Spa garden with palms', label: 'Spa garden', spec: 'Landscape 16:10 · 1600×1000', tone: 'sea' },
-  hotspotPier: { kind: 'image', alt: 'Sunset pier and boats', label: 'Sunset pier', spec: 'Landscape 16:10 · 1600×1000', tone: 'dusk' },
+  hotspotVillas: {
+    kind: 'image',
+    src: img('hotspot-villas'),
+    sizes: '(min-width: 768px) 24rem, 90vw',
+    alt: 'Pool villas with tiled roofs on a forested hillside above a beach',
+    label: 'Pool villas',
+    spec: 'Landscape 16:10 · 1600×1000',
+    tone: 'sand',
+  },
+  hotspotPool: {
+    kind: 'image',
+    src: img('hotspot-pool'),
+    sizes: '(min-width: 768px) 24rem, 90vw',
+    alt: 'An infinity pool mirroring a sunset sky between palm trees',
+    label: 'Infinity pool',
+    spec: 'Landscape 16:10 · 1600×1000',
+    tone: 'sea',
+  },
+  hotspotBeach: {
+    kind: 'image',
+    src: img('hotspot-beach'),
+    sizes: '(min-width: 768px) 24rem, 90vw',
+    alt: 'A sandy beach lined with straw umbrellas',
+    label: 'Beach club',
+    spec: 'Landscape 16:10 · 1600×1000',
+    tone: 'sand',
+  },
+  hotspotSpa: {
+    kind: 'image',
+    src: img('hotspot-spa'),
+    sizes: '(min-width: 768px) 24rem, 90vw',
+    alt: 'Spa candles, frangipani flowers and a rolled towel',
+    label: 'Spa garden',
+    spec: 'Landscape 16:10 · 1600×1000',
+    tone: 'sea',
+  },
+  hotspotPier: {
+    kind: 'image',
+    src: img('hotspot-pier'),
+    sizes: '(min-width: 768px) 24rem, 90vw',
+    alt: 'A wooden pier and boat on glassy water at sunset',
+    label: 'Sunset pier',
+    spec: 'Landscape 16:10 · 1600×1000',
+    tone: 'dusk',
+  },
 } satisfies Record<string, MediaSpec>;
 
 export type MediaKey = keyof typeof MEDIA;
@@ -124,6 +188,7 @@ export type MediaKey = keyof typeof MEDIA;
 /** Placeholder copy for data-driven suites (the photo itself comes from `room.image`). */
 export const ROOM_SLOT = {
   kind: 'image' as const,
+  sizes: '(min-width: 768px) 55vw, 100vw',
   spec: 'Landscape 3:2 · 2400×1600 · AVIF/WebP · hero shot of the suite',
   tone: 'sand' as MediaTone,
 };
@@ -131,6 +196,7 @@ export const ROOM_SLOT = {
 /** Placeholder copy for data-driven gallery tiles (photo comes from `item.image_url`). */
 export const GALLERY_SLOT = {
   kind: 'image' as const,
+  sizes: '(min-width: 768px) 32vw, 50vw',
   spec: 'Any ratio ≥ 1600px · AVIF/WebP',
   tones: ['sand', 'sea', 'dusk', 'ink'] as MediaTone[],
 };

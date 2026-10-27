@@ -14,8 +14,12 @@ import { Reveal, SplitReveal } from '../ui/Reveal';
 
 const CATEGORIES = ['All', 'Rooms', 'Lobby', 'Pool', 'Restaurant', 'Exterior'] as const;
 
-/** Bento spans repeat every 6 tiles → a rhythmic mosaic that works for any number of photos. */
-const SPANS = ['col-span-2 row-span-2', '', 'row-span-2', '', 'col-span-2', ''];
+/**
+ * Bento spans repeat every 6 tiles. On the 4-column desktop grid one cycle fills a 4×3 block exactly
+ * (4+1+2+1+2+2 = 12 cells), so a multiple of 6 photos leaves no holes. `grid-flow-dense` back-fills any
+ * gaps when staff add or remove photos.
+ */
+const SPANS = ['col-span-2 row-span-2', '', 'row-span-2', '', 'col-span-2', 'col-span-2'];
 
 /**
  * GALLERY – filterable bento mosaic. Tiles "zoom in" as they scroll into view
@@ -32,6 +36,7 @@ export default function Gallery({ items }: { items: GalleryItem[] }) {
     alt: `${item.category} at the resort`,
     label: `${item.category} · ${String(i + 1).padStart(2, '0')}`,
     spec: GALLERY_SLOT.spec,
+    sizes: GALLERY_SLOT.sizes,
     kind: GALLERY_SLOT.kind,
     tone: GALLERY_SLOT.tones[i % GALLERY_SLOT.tones.length],
   });
@@ -64,7 +69,7 @@ export default function Gallery({ items }: { items: GalleryItem[] }) {
           </Reveal>
         </div>
 
-        <motion.ul layout className="grid auto-rows-[9.5rem] grid-cols-2 gap-2.5 sm:auto-rows-[12rem] md:grid-cols-4 md:auto-rows-[13rem] md:gap-4 lg:auto-rows-[16rem]">
+        <motion.ul layout className="grid grid-flow-dense auto-rows-[9.5rem] grid-cols-2 gap-2.5 sm:auto-rows-[12rem] md:grid-cols-4 md:auto-rows-[13rem] md:gap-4 lg:auto-rows-[16rem]">
           <AnimatePresence mode="popLayout">
             {list.map((item, i) => (
               <motion.li
@@ -155,7 +160,7 @@ function Lightbox({
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
-            <MediaSlot fill {...slotProps(items[index], index)} />
+            <MediaSlot fill {...slotProps(items[index], index)} sizes="(min-width: 1024px) 64rem, 95vw" />
           </motion.div>
 
           <button ref={closeRef} onClick={onClose} aria-label="Close viewer" className="glass absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full md:right-8 md:top-8">
