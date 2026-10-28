@@ -244,6 +244,7 @@ export function buildVilla(mats: Mats, shared: SharedUniforms): Villa {
       uSize: { value: 5.5 },
       uColor: { value: new THREE.Color('#ffb25c') },
       uAlpha: { value: 0 },
+      uDrift: { value: 0 }, // lanterns stay where they hang
     },
     transparent: true,
     depthWrite: false,

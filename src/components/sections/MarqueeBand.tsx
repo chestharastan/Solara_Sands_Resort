@@ -7,23 +7,31 @@ import Marquee from '../ui/Marquee';
 
 const WORDS = ['Infinity pool', 'Beach club', 'Hydro-spa', "Chef's table", 'Sunset sail', 'Stargazing deck', 'Private villas'];
 
-/** A hot colour band between the dark 3D story and the light suites – Noomo-style kinetic type. */
+/**
+ * A quiet editorial ticker between the night chapter and the suites: one row, one direction, soft-faded
+ * edges, thin hairlines. Words alternate between solid, muted and italic serif for rhythm.
+ */
 export default function MarqueeBand() {
   return (
-    <section aria-label="Highlights" className="relative overflow-hidden bg-sun py-6 text-ink md:py-10">
-      <Marquee duration={55}>
-        {WORDS.map((w, i) => (
-          <span key={w} className="flex items-center">
-            <span className={`display px-6 text-[clamp(2.6rem,9vw,8rem)] md:px-10 ${i % 2 ? 'outline-text' : ''}`}>{w}</span>
-            <span className="serif-i text-[clamp(2rem,6vw,5rem)]" aria-hidden>✺</span>
-          </span>
+    <section aria-label="Highlights" className="relative overflow-hidden border-y hairline bg-ink py-8 md:py-14">
+      {/* The ticker is decorative (aria-hidden) – this is the accessible version of its content. */}
+      <ul className="sr-only">
+        {WORDS.map((w) => (
+          <li key={w}>{w}</li>
         ))}
-      </Marquee>
-      <Marquee duration={70} reverse className="mt-2 md:mt-4">
-        {[...WORDS].reverse().map((w) => (
-          <span key={w} className="flex items-center">
-            <span className="serif-i px-6 text-[clamp(1.8rem,5vw,4.2rem)] md:px-10">{w}</span>
-            <span className="text-[clamp(1rem,2vw,1.6rem)]" aria-hidden>●</span>
+      </ul>
+
+      <Marquee speed={64} className="marquee--fade">
+        {WORDS.map((w, i) => (
+          <span key={w} className="flex items-baseline gap-4 pr-12 md:gap-6 md:pr-20">
+            <span className="eyebrow !text-sun">{String(i + 1).padStart(2, '0')}</span>
+            <span
+              className={`display text-[clamp(2.4rem,7.2vw,6.25rem)] !font-medium !tracking-[-0.04em] text-sand ${
+                i % 3 === 1 ? '!text-sand/40' : i % 3 === 2 ? 'serif-i !font-normal !text-sun' : ''
+              }`}
+            >
+              {w}
+            </span>
           </span>
         ))}
       </Marquee>

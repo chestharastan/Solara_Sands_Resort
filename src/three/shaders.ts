@@ -245,16 +245,23 @@ export const PARTICLE_VERT = /* glsl */ `
   uniform float uTime;
   uniform float uSize;
   uniform float uPR;
+  uniform float uDrift;   // 1 = dust carried by a breeze, 0 = fixed in place (lanterns)
   varying float vA;
   void main() {
     vec3 p = position;
-    p.x += sin(uTime * 0.15 + aSeed * 30.0) * 1.2;
-    p.y += sin(uTime * 0.20 + aSeed * 17.0) * 0.8;
-    p.z += cos(uTime * 0.12 + aSeed * 11.0) * 1.2;
+    float edge = 1.0;
+    if (uDrift > 0.5) {
+      // Steady one-way drift (wind to +x, a slow rise) that wraps round inside the box – nothing sways to and fro.
+      p.x = mod(position.x + 35.0 + uTime * (0.3 + aSeed * 0.5), 70.0) - 35.0;
+      float yy = mod(position.y - 0.4 + uTime * (0.05 + aSeed * 0.08), 13.0);
+      p.y = yy + 0.4;
+      // Fade at the wrap edges so a speck never pops in or out.
+      edge = smoothstep(0.0, 5.0, 35.0 - abs(p.x)) * smoothstep(0.0, 1.2, yy) * smoothstep(0.0, 1.2, 13.0 - yy);
+    }
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     gl_PointSize = clamp(uSize * uPR * (0.4 + aSeed) * (30.0 / -mv.z), 1.0, 26.0 * uPR);
-    vA = 0.5 + 0.5 * sin(uTime * (1.0 + aSeed * 2.0) + aSeed * 40.0);
+    vA = (0.5 + 0.5 * sin(uTime * (1.0 + aSeed * 2.0) + aSeed * 40.0)) * edge; // twinkle (brightness only)
   }
 `;
 

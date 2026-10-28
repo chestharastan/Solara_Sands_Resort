@@ -117,7 +117,7 @@ export default function Experiences({ amenities }: { amenities: Amenity[] }) {
       {/* Amenity ticker – driven by the amenities list, so Staff Portal edits appear here */}
       {amenities.length > 0 && (
         <div className="mt-24 border-y hairline py-5 md:mt-40">
-          <Marquee duration={Math.max(30, amenities.length * 6)}>
+          <Marquee speed={50}>
             {amenities.map((a) => (
               <span key={a.id} className="flex items-center gap-3 px-8 text-[clamp(1.1rem,2vw,1.6rem)]">
                 <AmenityIcon name={a.icon} className="h-5 w-5 text-sun" /> {a.name}

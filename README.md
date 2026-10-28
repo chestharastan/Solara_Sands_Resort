@@ -24,7 +24,7 @@ Optional: set `GOOGLE_MAPS_PLATFORM_KEY` in `.env.local` to show a live Google m
 | 01 | **Hero** | Live 3D sunrise over water; headline "zooms" toward you as you leave |
 | 01 | **Story** | Pinned manifesto – words light up as you scroll while the 3D camera pushes in (Igloo / Beagle) |
 | 02 | **A day at Solara** | Chaptered, pinned storytelling; scrolling moves the sun, the HUD clock and the camera (Persepolis) |
-| – | Marquee band | Kinetic type |
+| – | Highlights ticker | A calm editorial ticker – one row, one direction, a little faster as you scroll |
 | 03 | **Suites** | Sticky "deck" of project cards that bury each other (Noomo) |
 | 04 | **Experiences** | Three columns at three parallax depths + amenity ticker (Simply Chocolate) |
 | 05 | **Island explorer** | Drag-to-rotate 3D diorama with clickable hotspots (Bruno Simon) |

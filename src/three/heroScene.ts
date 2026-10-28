@@ -53,6 +53,20 @@ interface Key {
 
 const ISLAND_POS = new THREE.Vector3(8, 0, -24);
 
+/**
+ * THE BOAT'S ROUTE – one slow lap around the whole island, always in the same direction.
+ * The near half of the lap passes behind the hero camera (radius 44 > the camera's distance from the island),
+ * so on screen you only ever see the far half: the boat sails steadily from left to right along the horizon,
+ * slips behind the island, and carries on round. It never reverses or slides sideways like a back-and-forth
+ * oscillation would; its hull always points along its heading.
+ */
+const ORBIT_R = 44;
+const ORBIT_SPEED = 1.5; // world units per second (a lap takes ~3 minutes)
+const ORBIT_START = -Math.PI / 2 - 0.65; // starts just left of the island, near the rising sun
+const BOAT_SCALE = 1.25; // it sails far away, so it is drawn larger than a nearby boat would be
+
+// The chapters track steadily to the RIGHT (x: -3.5 → 4 → 13 → 17) – one continuous dolly, never a
+// left/right sway between chapters.
 const KEYS: Key[] = [
   { p: 0, pos: [0, 1.5, 12], look: [-1.5, 6.0, -40] }, // hero: low, sun on the horizon
   { p: P_HERO_END, pos: [0.4, 1.7, 7], look: [1, 5, -40] },
@@ -60,9 +74,9 @@ const KEYS: Key[] = [
   { p: P_STORY_END, pos: [-4.5, 5.2, -10], look: [8, 1.8, -24] }, // aerial three-quarter view
   { p: chapterCenter(0), pos: [-3.5, 4.4, -9.5], look: [8, 2.0, -24] }, // morning
   { p: chapterCenter(1), pos: [4, 3.2, -12], look: [8.5, 2.2, -24] }, // midday: close to the pool
-  { p: chapterCenter(2), pos: [-7, 2.8, -11], look: [9, 2.6, -25] }, // golden hour: sun hangs just right of the island
-  { p: chapterCenter(3), pos: [6, 2.4, -8], look: [8, 4.5, -24] }, // night: lanterns, stars above
-  { p: 1, pos: [7, 3, -10], look: [8, 5.2, -24] },
+  { p: chapterCenter(2), pos: [13, 2.8, -10], look: [8.5, 2.4, -24.5] }, // golden hour: sun hangs just right of the island
+  { p: chapterCenter(3), pos: [17, 2.4, -9.5], look: [8, 4.5, -24] }, // night: lanterns, stars above
+  { p: 1, pos: [18, 3, -11], look: [8, 5.2, -24] },
 ];
 
 const { smoothstep, clamp, lerp } = THREE.MathUtils;
@@ -85,7 +99,7 @@ const setRGB = (c: THREE.Color, v: RGB) => c.setRGB(v[0], v[1], v[2], THREE.SRGB
  * path, not astronomy: backlit sunrise in the hero, side light in the morning, front light at
  * midday, and at golden hour the sun swings round to the right so it hangs beside the island.
  */
-const SUN_AZ: Array<[number, number]> = [[0, -0.55], [0.17, -0.55], [0.32, -1.5], [0.5, -3.14], [0.65, -3.9], [0.79, -4.9], [1, -5.6]];
+const SUN_AZ: Array<[number, number]> = [[0, -0.55], [0.17, -0.55], [0.32, -1.5], [0.5, -3.14], [0.65, -3.9], [0.79, -5.73], [1, -6.2]];
 function sunAzimuth(tod: number): number {
   if (tod <= SUN_AZ[0][0]) return SUN_AZ[0][1];
   for (let i = 1; i < SUN_AZ.length; i++) {
@@ -194,8 +208,8 @@ export function createHeroScene({ container, zone, profile }: HeroSceneOptions):
 
   // Distant islets give depth/parallax at the horizon.
   const islets = [
-    { x: -26, z: -52, s: 0.5, seed: 3 },
-    { x: 34, z: -66, s: 0.8, seed: 5 },
+    { x: -22, z: -44, s: 0.5, seed: 3 }, // inside the boat's lap
+    { x: 46, z: -62, s: 0.7, seed: 5 }, // outside it
   ].map((c) => {
     const isl = buildIsland(mats, shared, { withVilla: false, palms: 5, seed: c.seed, segs: 44 });
     isl.group.position.set(c.x, 0, c.z);
@@ -209,7 +223,6 @@ export function createHeroScene({ container, zone, profile }: HeroSceneOptions):
   });
 
   const boat = buildBoat(mats);
-  boat.scale.setScalar(0.6);
   scene.add(boat);
 
   /* ---- Particles ----------------------------------------------------------- */
@@ -235,6 +248,7 @@ export function createHeroScene({ container, zone, profile }: HeroSceneOptions):
       uSize: { value: 2.2 },
       uColor: { value: new THREE.Color('#fff2cf') },
       uAlpha: { value: 0.4 },
+      uDrift: { value: 1 }, // dust is carried steadily by a light breeze (no swaying to and fro)
     },
     transparent: true,
     depthWrite: false,
@@ -433,13 +447,15 @@ export function createHeroScene({ container, zone, profile }: HeroSceneOptions):
     }
     camera.updateMatrixWorld();
 
-    if (animated) {
-      // Boat drifts and bobs; sails never stop gently moving.
-      boat.position.set(-10 + Math.sin(time * 0.08) * 2.5, 0.04 + Math.sin(time * 0.9) * 0.04, -27 + Math.cos(time * 0.06) * 2);
-      boat.rotation.set(Math.sin(time * 0.7) * 0.03, 0.6 + Math.sin(time * 0.1) * 0.15, Math.sin(time * 0.6) * 0.03);
-    } else {
-      boat.position.set(-10, 0.04, -27);
-      boat.rotation.y = 0.6;
+    // Boat: constant-speed lap, heading = direction of travel, gentle bob + heel. (Bow is local -x.)
+    {
+      const th = ORBIT_START + (ORBIT_SPEED / ORBIT_R) * time;
+      boat.position.set(ISLAND_POS.x + ORBIT_R * Math.cos(th), 0.04 + (animated ? Math.sin(time * 0.9) * 0.04 : 0), ISLAND_POS.z + ORBIT_R * Math.sin(th));
+      boat.rotation.set(animated ? Math.sin(time * 0.7) * 0.03 : 0, Math.atan2(Math.cos(th), Math.sin(th)), 0.06 + (animated ? Math.sin(time * 0.6) * 0.03 : 0));
+      // Shrink away if it ever gets close to the camera, so it can never pop through the lens.
+      const near = smoothstep(boat.position.distanceTo(camera.position), 7, 18);
+      boat.scale.setScalar(Math.max(BOAT_SCALE * near, 0.0001));
+      boat.visible = near > 0.02;
     }
 
     updateSky(todDisp);
@@ -494,6 +510,11 @@ export function createHeroScene({ container, zone, profile }: HeroSceneOptions):
       scene,
       camera,
       sceneState,
+      boat,
+      /** Fast-forward the animation clock (seconds) – lets tests sample the boat's route. */
+      skip(seconds: number) {
+        time += seconds;
+      },
       snap() {
         pDisp = sceneState.progress;
         todDisp = sceneState.tod;
